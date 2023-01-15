@@ -8,6 +8,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "ToolMenus.h"
+#include "SARSlateWidget.h"
 
 static const FName AckermannsRouletteTabName("AckermannsRoulette");
 
@@ -68,10 +69,17 @@ TSharedRef<SDockTab> FAckermannsRouletteModule::OnSpawnPluginTab(const FSpawnTab
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
 			[
-				SNew(STextBlock)
-				.Text(WidgetText)
+				SNew(SARSlateWidget)
+				.OnGenerateButtonClicked(FOnClicked::CreateRaw(this, &FAckermannsRouletteModule::GetRandomNumber))
 			]
 		];
+}
+
+FReply FAckermannsRouletteModule::GetRandomNumber()
+{
+	UE_LOG(LogTemp, Warning, TEXT("ON GENERATE SLATE BUTTON IS CLICKED"));
+
+	return FReply::Handled();
 }
 
 void FAckermannsRouletteModule::PluginButtonClicked()
