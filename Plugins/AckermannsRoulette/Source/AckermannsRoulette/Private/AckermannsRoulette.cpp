@@ -129,7 +129,16 @@ FReply FAckermannsRouletteModule::GetRandomNumber()
 void FAckermannsRouletteModule::OnRandomNumberAPIResponceReceived(FHttpRequestPtr Request, FHttpResponsePtr Response,
 	bool bConnectedSuccessfully)
 {
-	UE_LOG(LogTemp, Warning, TEXT("API Response %s"), *Response->GetContentAsString());
+	// The API response is a plain String value,
+	// I want to use in-built Json to Struct converter insted of writing custom parser,
+	// So at below a Json string constructed with Response String to convert FResponseStruct
+	FString ResponsStr = "{ \"RandomArray\":" + Response->GetContentAsString() +" }";
+	UE_LOG(LogTemp, Warning, TEXT("Response %s, Getcontent type: %s"), *ResponsStr, *Response->GetContentType());
+	
+	FResponseStruct ResponseStruct;
+	FJsonObjectConverter::JsonObjectStringToUStruct<FResponseStruct>(ResponsStr, &ResponseStruct);
+
+	UE_LOG(LogTemp, Warning, TEXT("The random number: %d"), (!ResponseStruct.RandomArray.IsEmpty() ? ResponseStruct.RandomArray[0] : -1));
 }
 
 void FAckermannsRouletteModule::PluginButtonClicked()
