@@ -86,7 +86,11 @@ FReply FAckermannsRouletteModule::GetRandomNumber()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ON GENERATE SLATE BUTTON IS CLICKED"));
 
-	if (StaticMeshArray.Num() == 0) return FReply::Unhandled();
+	if (StaticMeshArray.Num() == 0)
+	{
+		RandomNumber = -1;
+		return FReply::Unhandled();
+	}
 
 	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 
