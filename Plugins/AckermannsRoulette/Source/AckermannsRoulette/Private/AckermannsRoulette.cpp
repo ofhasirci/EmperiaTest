@@ -6,9 +6,11 @@
 #include "LevelEditor.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Text/STextBlock.h"
 #include "ToolMenus.h"
 #include "SARSlateWidget.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StaticMeshActor.h"
+#include "Engine/StreamableManager.h"
 
 static const FName AckermannsRouletteTabName("AckermannsRoulette");
 
@@ -35,6 +37,8 @@ void FAckermannsRouletteModule::StartupModule()
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(AckermannsRouletteTabName, FOnSpawnTab::CreateRaw(this, &FAckermannsRouletteModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FAckermannsRouletteTabTitle", "AckermannsRoulette"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
+
+	MeshPtr = TSoftObjectPtr<UStaticMesh>(FSoftObjectPath(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")));
 }
 
 void FAckermannsRouletteModule::ShutdownModule()
@@ -75,9 +79,32 @@ TSharedRef<SDockTab> FAckermannsRouletteModule::OnSpawnPluginTab(const FSpawnTab
 		];
 }
 
+void FAckermannsRouletteModule::GrantItemsDeferred()
+{
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+
+	if (AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass()))
+	{
+		if (MeshPtr.Get())
+		{
+			MeshActor->GetStaticMeshComponent()->SetStaticMesh(MeshPtr.Get());
+			MeshActor->SetActorLocation(FVector(0.f, 0.f, 60.f));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MESH ACTOR COULD NOT LOAD"));
+		}
+	}
+}
+
 FReply FAckermannsRouletteModule::GetRandomNumber()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ON GENERATE SLATE BUTTON IS CLICKED"));
+
+	TArray<FSoftObjectPath> ItemsToStream;
+	ItemsToStream.Add(MeshPtr.ToSoftObjectPath());
+	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+	Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateRaw(this, &FAckermannsRouletteModule::GrantItemsDeferred));
 
 	return FReply::Handled();
 }

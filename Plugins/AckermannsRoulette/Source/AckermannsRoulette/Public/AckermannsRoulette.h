@@ -28,5 +28,8 @@ private:
 
 	TSharedPtr<class FUICommandList> PluginCommands;
 
+	void GrantItemsDeferred();
 	FReply GetRandomNumber();
+
+	TSoftObjectPtr<UStaticMesh> MeshPtr;
 };
