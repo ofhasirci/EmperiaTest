@@ -3,14 +3,20 @@
 
 #include "SARSlateWidget.h"
 
+#include "ARDataStruct.h"
 #include "DetailLayoutBuilder.h"
 #include "SlateOptMacros.h"
 #include "PropertyCustomizationHelpers.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
+
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
+
 void SARSlateWidget::Construct(const FArguments& InArgs)
 {
 	OnGenerateButtonClicked = InArgs._OnGenerateButtonClicked;
+	OnDTSelected = InArgs._OnDTSelected;
 
 	TArray<const UClass*> AllowedClasses;
 	AllowedClasses.Add(UDataTable::StaticClass());
@@ -74,6 +80,9 @@ FReply SARSlateWidget::OnButtonClicked()
 void SARSlateWidget::OnDTAssetSelected(const FAssetData& AssetData)
 {
 	UE_LOG(LogTemp, Warning, TEXT("DT Asset: %s"), *AssetData.GetFullName());
+
+	OnDTSelected.Execute(AssetData.GetSoftObjectPath());
+	
 }
 
 void SARSlateWidget::OnGetAllowedClasses(TArray<const UClass*>& Classes)
@@ -82,7 +91,8 @@ void SARSlateWidget::OnGetAllowedClasses(TArray<const UClass*>& Classes)
 
 void SARSlateWidget::OnAssetSelected(const FAssetData& AssetData)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Anchor Asset: %s"), *AssetData.GetFullName());
+	UE_LOG(LogTemp, Warning, TEXT("Anchor Asset: %s"), *AssetData.GetObjectPathString());
+
 }
 
 

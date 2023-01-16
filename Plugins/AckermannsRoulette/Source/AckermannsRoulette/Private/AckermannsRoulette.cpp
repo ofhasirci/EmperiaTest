@@ -3,6 +3,7 @@
 #include "AckermannsRoulette.h"
 #include "AckermannsRouletteStyle.h"
 #include "AckermannsRouletteCommands.h"
+#include "ARDataStruct.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
 #include "LevelEditor.h"
@@ -79,6 +80,7 @@ TSharedRef<SDockTab> FAckermannsRouletteModule::OnSpawnPluginTab(const FSpawnTab
 			[
 				SNew(SARSlateWidget)
 				.OnGenerateButtonClicked(FOnClicked::CreateRaw(this, &FAckermannsRouletteModule::GetRandomNumber))
+				.OnDTSelected(FOnDTSelected::CreateRaw(this, &FAckermannsRouletteModule::OnDataTableSelected))
 			]
 		];
 }
@@ -168,6 +170,28 @@ void FAckermannsRouletteModule::RegisterMenus()
 				Entry.SetCommandList(PluginCommands);
 			}
 		}
+	}
+}
+
+void FAckermannsRouletteModule::OnDataTableSelected(FSoftObjectPath SoftObjectPath)
+{
+	DTStaticMesh = TSoftObjectPtr<UDataTable>(SoftObjectPath);
+
+	TArray<FSoftObjectPath> ItemsToStream;
+	ItemsToStream.Add(DTStaticMesh.ToSoftObjectPath());
+	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+	Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateRaw(this, &FAckermannsRouletteModule::OnDataTableLoaded));
+}
+
+void FAckermannsRouletteModule::OnDataTableLoaded()
+{
+	if (DTStaticMesh.Get())
+	{
+		TArray<FARDataStruct*> RowArray;
+		FString Context;
+		DTStaticMesh.Get()->GetAllRows<FARDataStruct>(Context, RowArray);
+
+		UE_LOG(LogTemp, Warning, TEXT("DAta count: %d"), RowArray.Num());
 	}
 }
 

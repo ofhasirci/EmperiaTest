@@ -25,14 +25,20 @@ private:
 
 	void RegisterMenus();
 
+	void OnDataTableSelected(FSoftObjectPath SoftObjectPath);
+
 	TSharedRef<class SDockTab> OnSpawnPluginTab(const class FSpawnTabArgs& SpawnTabArgs);
 
 	TSharedPtr<class FUICommandList> PluginCommands;
 
 	void GrantItemsDeferred();
+	void OnDataTableLoaded();
+
 	FReply GetRandomNumber();
 
 	TSoftObjectPtr<UStaticMesh> MeshPtr;
+
+	TSoftObjectPtr<UDataTable> DTStaticMesh;
 
 	void OnRandomNumberAPIResponceReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
 };

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
+DECLARE_DELEGATE_OneParam(FOnDTSelected, FSoftObjectPath)
 
 /**
  * 
@@ -16,6 +17,8 @@ public:
 	{
 	}
 		SLATE_EVENT(FOnClicked, OnGenerateButtonClicked)
+		SLATE_EVENT(FOnDTSelected, OnDTSelected)
+
 	SLATE_END_ARGS()
 
 	/** Constructs this widget with InArgs */
@@ -25,6 +28,8 @@ public:
 
 private:
 	FOnClicked OnGenerateButtonClicked;
+
+	FOnDTSelected OnDTSelected;
 
 	void OnDTAssetSelected(const FAssetData& AssetData);
 
