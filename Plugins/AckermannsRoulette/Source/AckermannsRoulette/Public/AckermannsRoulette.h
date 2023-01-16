@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ARDataStruct.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Modules/ModuleManager.h"
 
@@ -31,14 +32,21 @@ private:
 
 	TSharedPtr<class FUICommandList> PluginCommands;
 
-	void GrantItemsDeferred();
+	int RandomNumber = -1;
+
+	void OnStaticMeshLoaded();
+
 	void OnDataTableLoaded();
 
 	FReply GetRandomNumber();
 
-	TSoftObjectPtr<UStaticMesh> MeshPtr;
-
 	TSoftObjectPtr<UDataTable> DTStaticMesh;
 
+	TArray<FARDataStruct*> StaticMeshArray;
+
 	void OnRandomNumberAPIResponceReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
+
+	void AddStaticMeshToWorld();
+
+	void SpawnStaticMeshActor(TSoftObjectPtr<UStaticMesh> Mesh);
 };

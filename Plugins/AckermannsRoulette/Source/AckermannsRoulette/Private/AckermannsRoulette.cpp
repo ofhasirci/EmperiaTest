@@ -42,8 +42,6 @@ void FAckermannsRouletteModule::StartupModule()
 	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(AckermannsRouletteTabName, FOnSpawnTab::CreateRaw(this, &FAckermannsRouletteModule::OnSpawnPluginTab))
 		.SetDisplayName(LOCTEXT("FAckermannsRouletteTabTitle", "AckermannsRoulette"))
 		.SetMenuType(ETabSpawnerMenuType::Hidden);
-
-	MeshPtr = TSoftObjectPtr<UStaticMesh>(FSoftObjectPath(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")));
 }
 
 void FAckermannsRouletteModule::ShutdownModule()
@@ -73,7 +71,6 @@ TSharedRef<SDockTab> FAckermannsRouletteModule::OnSpawnPluginTab(const FSpawnTab
 	return SNew(SDockTab)
 		.TabRole(ETabRole::NomadTab)
 		[
-			// Put your tab content here!
 			SNew(SBox)
 			.HAlign(HAlign_Center)
 			.VAlign(VAlign_Center)
@@ -85,37 +82,16 @@ TSharedRef<SDockTab> FAckermannsRouletteModule::OnSpawnPluginTab(const FSpawnTab
 		];
 }
 
-void FAckermannsRouletteModule::GrantItemsDeferred()
-{
-	UWorld* World = GEditor->GetEditorWorldContext().World();
-
-	if (AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass()))
-	{
-		if (MeshPtr.Get())
-		{
-			MeshActor->GetStaticMeshComponent()->SetStaticMesh(MeshPtr.Get());
-			MeshActor->SetActorLocation(FVector(0.f, 0.f, 60.f));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("MESH ACTOR COULD NOT LOAD"));
-		}
-	}
-}
-
 FReply FAckermannsRouletteModule::GetRandomNumber()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ON GENERATE SLATE BUTTON IS CLICKED"));
 
-	/*TArray<FSoftObjectPath> ItemsToStream;
-	ItemsToStream.Add(MeshPtr.ToSoftObjectPath());
-	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
-	Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateRaw(this, &FAckermannsRouletteModule::GrantItemsDeferred));*/
+	if (StaticMeshArray.Num() == 0) return FReply::Unhandled();
 
 	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
 
 	FString min = "0";
-	FString max = "10";
+	FString max = FString::FromInt(StaticMeshArray.Num() - 1);
 	FString count = "1";
 
 	FString URL = "http://www.randomnumberapi.com/api/v1.0/random?min=" + min +"&max=" + max + "&count=" + count;
@@ -138,9 +114,18 @@ void FAckermannsRouletteModule::OnRandomNumberAPIResponceReceived(FHttpRequestPt
 	UE_LOG(LogTemp, Warning, TEXT("Response %s, Getcontent type: %s"), *ResponsStr, *Response->GetContentType());
 	
 	FResponseStruct ResponseStruct;
-	FJsonObjectConverter::JsonObjectStringToUStruct<FResponseStruct>(ResponsStr, &ResponseStruct);
+	if (FJsonObjectConverter::JsonObjectStringToUStruct<FResponseStruct>(ResponsStr, &ResponseStruct))
+	{
+		RandomNumber = !ResponseStruct.RandomArray.IsEmpty() ? ResponseStruct.RandomArray[0] : -1;
 
-	UE_LOG(LogTemp, Warning, TEXT("The random number: %d"), (!ResponseStruct.RandomArray.IsEmpty() ? ResponseStruct.RandomArray[0] : -1));
+		UE_LOG(LogTemp, Warning, TEXT("The random number: %d"), RandomNumber);
+
+		AddStaticMeshToWorld();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("There is an error while getting Random Number from API!") );
+	}
 }
 
 void FAckermannsRouletteModule::PluginButtonClicked()
@@ -185,13 +170,58 @@ void FAckermannsRouletteModule::OnDataTableSelected(FSoftObjectPath SoftObjectPa
 
 void FAckermannsRouletteModule::OnDataTableLoaded()
 {
-	if (DTStaticMesh.Get())
+	StaticMeshArray.Empty();
+	if (DTStaticMesh.Get() && DTStaticMesh->GetRowStruct() == FARDataStruct::StaticStruct())
 	{
-		TArray<FARDataStruct*> RowArray;
 		FString Context;
-		DTStaticMesh.Get()->GetAllRows<FARDataStruct>(Context, RowArray);
+		DTStaticMesh.Get()->GetAllRows<FARDataStruct>(Context, StaticMeshArray);
 
-		UE_LOG(LogTemp, Warning, TEXT("DAta count: %d"), RowArray.Num());
+		UE_LOG(LogTemp, Warning, TEXT("DAta count: %d"), StaticMeshArray.Num());
+	}
+}
+
+void FAckermannsRouletteModule::AddStaticMeshToWorld()
+{
+	if (RandomNumber == -1) return;
+	if (StaticMeshArray.Num() == 0) return;
+
+	const auto Mesh = StaticMeshArray[RandomNumber]->StaticMesh;
+
+	if (Mesh.Get())
+	{
+		SpawnStaticMeshActor(Mesh);
+		return;
+	}
+
+	TArray<FSoftObjectPath> ItemsToStream;
+	ItemsToStream.Add(Mesh.ToSoftObjectPath());
+	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
+	Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateRaw(this, &FAckermannsRouletteModule::OnStaticMeshLoaded));
+
+}
+
+void FAckermannsRouletteModule::OnStaticMeshLoaded()
+{
+	SpawnStaticMeshActor(StaticMeshArray[RandomNumber]->StaticMesh);
+}
+
+void FAckermannsRouletteModule::SpawnStaticMeshActor(TSoftObjectPtr<UStaticMesh> Mesh)
+{
+	if (!Mesh) return;
+
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+
+	if (AStaticMeshActor* MeshActor = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass()))
+	{
+		if (Mesh.Get())
+		{
+			MeshActor->GetStaticMeshComponent()->SetStaticMesh(Mesh.Get());
+			MeshActor->SetActorLocation(FVector(0.f, 0.f, 60.f));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MESH ACTOR COULD NOT LOAD!"));
+		}
 	}
 }
 
