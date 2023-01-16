@@ -46,6 +46,7 @@ public class AckermannsRoulette : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"PropertyEditor"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

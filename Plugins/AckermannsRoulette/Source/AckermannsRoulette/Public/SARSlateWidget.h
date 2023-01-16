@@ -25,4 +25,10 @@ public:
 
 private:
 	FOnClicked OnGenerateButtonClicked;
+
+	void OnDTAssetSelected(const FAssetData& AssetData);
+
+	void OnGetAllowedClasses(TArray<const UClass*>& Classes);
+
+	void OnAssetSelected(const FAssetData& AssetData);
 };

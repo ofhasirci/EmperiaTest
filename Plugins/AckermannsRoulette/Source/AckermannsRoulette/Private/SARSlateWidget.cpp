@@ -2,24 +2,49 @@
 
 
 #include "SARSlateWidget.h"
+
+#include "DetailLayoutBuilder.h"
 #include "SlateOptMacros.h"
+#include "PropertyCustomizationHelpers.h"
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SARSlateWidget::Construct(const FArguments& InArgs)
 {
 	OnGenerateButtonClicked = InArgs._OnGenerateButtonClicked;
 
+	TArray<const UClass*> AllowedClasses;
+	AllowedClasses.Add(UDataTable::StaticClass());
+
 	ChildSlot
 		[
 			SNew(SVerticalBox)
 			+ SVerticalBox::Slot()
+			.Padding(2.0f, 2.0f, 2.0f, 10.0f)
 			.AutoHeight()
-				[
-					SNew(STextBlock)
-					.Text(FText::FromString("Generate Random Shapes"))
-					.Justification(ETextJustify::Center)
-				]
+			.HAlign(EHorizontalAlignment::HAlign_Center)
+			.VAlign(EVerticalAlignment::VAlign_Center)
+			[
+				PropertyCustomizationHelpers::MakeAssetPickerWithMenu(
+					FAssetData(), 
+					false, 
+					false, 
+					AllowedClasses, 
+					TArray<UFactory*>(),
+					FOnShouldFilterAsset(),
+					FOnAssetSelected::CreateRaw(this, &SARSlateWidget::OnDTAssetSelected),
+					FSimpleDelegate())
+				//PropertyCustomizationHelpers::MakeAssetPickerAnchorButton(FOnGetAllowedClasses::CreateRaw(this, &SARSlateWidget::OnGetAllowedClasses), FOnAssetSelected::CreateRaw(this, &SARSlateWidget::OnAssetSelected))
+			]
 			+ SVerticalBox::Slot()
+			.Padding(2.0f)
+			.AutoHeight()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString("Generate Random Shapes"))
+				.Justification(ETextJustify::Center)
+			]
+			+ SVerticalBox::Slot()
+			.Padding(2.0f)
 			.AutoHeight()
 			[
 				SNew(SButton)
@@ -45,5 +70,21 @@ FReply SARSlateWidget::OnButtonClicked()
 
 	return FReply::Unhandled();
 }
+
+void SARSlateWidget::OnDTAssetSelected(const FAssetData& AssetData)
+{
+	UE_LOG(LogTemp, Warning, TEXT("DT Asset: %s"), *AssetData.GetFullName());
+}
+
+void SARSlateWidget::OnGetAllowedClasses(TArray<const UClass*>& Classes)
+{
+}
+
+void SARSlateWidget::OnAssetSelected(const FAssetData& AssetData)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Anchor Asset: %s"), *AssetData.GetFullName());
+}
+
+
 
 END_SLATE_FUNCTION_BUILD_OPTIMIZATION
