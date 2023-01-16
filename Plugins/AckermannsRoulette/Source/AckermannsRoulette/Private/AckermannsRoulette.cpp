@@ -3,7 +3,10 @@
 #include "AckermannsRoulette.h"
 #include "AckermannsRouletteStyle.h"
 #include "AckermannsRouletteCommands.h"
+#include "HttpModule.h"
+#include "JsonObjectConverter.h"
 #include "LevelEditor.h"
+#include "ResponseStruct.h"
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "ToolMenus.h"
@@ -11,6 +14,7 @@
 #include "Engine/AssetManager.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/StreamableManager.h"
+#include "Interfaces/IHttpResponse.h"
 
 static const FName AckermannsRouletteTabName("AckermannsRoulette");
 
@@ -101,12 +105,31 @@ FReply FAckermannsRouletteModule::GetRandomNumber()
 {
 	UE_LOG(LogTemp, Warning, TEXT("ON GENERATE SLATE BUTTON IS CLICKED"));
 
-	TArray<FSoftObjectPath> ItemsToStream;
+	/*TArray<FSoftObjectPath> ItemsToStream;
 	ItemsToStream.Add(MeshPtr.ToSoftObjectPath());
 	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
-	Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateRaw(this, &FAckermannsRouletteModule::GrantItemsDeferred));
+	Streamable.RequestAsyncLoad(ItemsToStream, FStreamableDelegate::CreateRaw(this, &FAckermannsRouletteModule::GrantItemsDeferred));*/
+
+	FHttpRequestRef Request = FHttpModule::Get().CreateRequest();
+
+	FString min = "0";
+	FString max = "10";
+	FString count = "1";
+
+	FString URL = "http://www.randomnumberapi.com/api/v1.0/random?min=" + min +"&max=" + max + "&count=" + count;
+
+	Request->OnProcessRequestComplete().BindRaw(this, &FAckermannsRouletteModule::OnRandomNumberAPIResponceReceived);
+	Request->SetURL(URL);
+	Request->SetVerb("GET");
+	Request->ProcessRequest();
 
 	return FReply::Handled();
+}
+
+void FAckermannsRouletteModule::OnRandomNumberAPIResponceReceived(FHttpRequestPtr Request, FHttpResponsePtr Response,
+	bool bConnectedSuccessfully)
+{
+	UE_LOG(LogTemp, Warning, TEXT("API Response %s"), *Response->GetContentAsString());
 }
 
 void FAckermannsRouletteModule::PluginButtonClicked()

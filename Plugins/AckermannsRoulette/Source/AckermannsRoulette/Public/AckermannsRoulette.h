@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/IHttpRequest.h"
 #include "Modules/ModuleManager.h"
 
 class FToolBarBuilder;
@@ -32,4 +33,6 @@ private:
 	FReply GetRandomNumber();
 
 	TSoftObjectPtr<UStaticMesh> MeshPtr;
+
+	void OnRandomNumberAPIResponceReceived(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bConnectedSuccessfully);
 };
