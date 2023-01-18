@@ -7,7 +7,7 @@ Prerequisites:
 
 Please follow the steps below to run this project:
 
-* Clone project to your locak directory: "git clone https://github.com/ofhasirci/EmperiaTest.git"
+* Clone project to your local directory: "git clone https://github.com/ofhasirci/EmperiaTest.git"
 * Right click to .uproject file and select "Generate Visual Studio project files"
 * Open .uproject file
 * You have to create a Data Table for "Ackermann's Roulette" plugin or Data Table ("DT_StaticMesh") can be used for test.
