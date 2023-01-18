@@ -84,8 +84,6 @@ TSharedRef<SDockTab> FAckermannsRouletteModule::OnSpawnPluginTab(const FSpawnTab
 
 FReply FAckermannsRouletteModule::GetRandomNumber()
 {
-	UE_LOG(LogTemp, Warning, TEXT("ON GENERATE SLATE BUTTON IS CLICKED"));
-
 	if (StaticMeshArray.Num() == 0)
 	{
 		RandomNumber = -1;
@@ -112,23 +110,17 @@ void FAckermannsRouletteModule::OnRandomNumberAPIResponceReceived(FHttpRequestPt
 	bool bConnectedSuccessfully)
 {
 	// The API response is a plain String value,
-	// I want to use in-built Json to Struct converter insted of writing custom parser,
+	// I want to use in-built Json to Struct converter instead of writing a custom parser,
 	// So at below a Json string constructed with Response String to convert FResponseStruct
 	FString ResponsStr = "{ \"RandomArray\":" + Response->GetContentAsString() +" }";
-	UE_LOG(LogTemp, Warning, TEXT("Response %s, Getcontent type: %s"), *ResponsStr, *Response->GetContentType());
+	//UE_LOG(LogTemp, Warning, TEXT("Response %s, Getcontent type: %s"), *ResponsStr, *Response->GetContentType());
 	
 	FResponseStruct ResponseStruct;
 	if (FJsonObjectConverter::JsonObjectStringToUStruct<FResponseStruct>(ResponsStr, &ResponseStruct))
 	{
 		RandomNumber = !ResponseStruct.RandomArray.IsEmpty() ? ResponseStruct.RandomArray[0] : -1;
 
-		UE_LOG(LogTemp, Warning, TEXT("The random number: %d"), RandomNumber);
-
 		AddStaticMeshToWorld();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("There is an error while getting Random Number from API!") );
 	}
 }
 

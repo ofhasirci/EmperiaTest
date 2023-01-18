@@ -66,8 +66,6 @@ void SARSlateWidget::Construct(const FArguments& InArgs)
 
 FReply SARSlateWidget::OnButtonClicked()
 {
-	UE_LOG(LogTemp, Warning, TEXT("SLATE BUTTON IS CLICKED"));
-
 	if (OnGenerateButtonClicked.IsBound())
 	{
 		OnGenerateButtonClicked.Execute();
