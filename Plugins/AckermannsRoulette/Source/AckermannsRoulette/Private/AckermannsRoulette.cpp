@@ -16,6 +16,8 @@
 #include "Engine/StaticMeshActor.h"
 #include "Engine/StreamableManager.h"
 #include "Interfaces/IHttpResponse.h"
+#include "EditorUtilitySubsystem.h"
+#include "EditorUtilityWidgetBlueprint.h"
 
 static const FName AckermannsRouletteTabName("AckermannsRoulette");
 
@@ -126,7 +128,23 @@ void FAckermannsRouletteModule::OnRandomNumberAPIResponceReceived(FHttpRequestPt
 
 void FAckermannsRouletteModule::PluginButtonClicked()
 {
-	FGlobalTabmanager::Get()->TryInvokeTab(AckermannsRouletteTabName);
+	//FGlobalTabmanager::Get()->TryInvokeTab(AckermannsRouletteTabName);
+
+	UObject* WidgetObj = LoadObject<UObject>(nullptr, TEXT("/AckermannsRoulette/UWBP_ARWidget.UWBP_ARWidget"));
+	if (!WidgetObj)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Editor Utility Widget could not be loaded."));
+		return;
+	}
+
+	UEditorUtilityWidgetBlueprint* WidgetBP = Cast<UEditorUtilityWidgetBlueprint>(WidgetObj);
+	if (!WidgetBP)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Editor Utility Widget does not work."));
+		return;
+	}
+	UEditorUtilitySubsystem* EditorUtilitySubsystem = GEditor->GetEditorSubsystem<UEditorUtilitySubsystem>();
+	EditorUtilitySubsystem->SpawnAndRegisterTab(WidgetBP);
 }
 
 void FAckermannsRouletteModule::RegisterMenus()
